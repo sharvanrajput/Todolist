@@ -1,35 +1,99 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    const savedTasks = JSON.parse(localStorage.getItem("tasks"));
+    if (savedTasks && savedTasks.length > 0) setTasks(savedTasks);
+  }, []);
+
+  const updateLocalStorage = (updatedTasks) => {
+    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+  };
+
+  const inputChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  const addTask = () => {
+    if (input.trim() === "") return;
+    const newTasks = [...tasks, { text: input, completed: false }];
+    setTasks(newTasks);
+    updateLocalStorage(newTasks);
+    setInput("");
+  };
+
+  const toggleComplete = (index) => {
+    const updatedTasks = tasks.map((task, i) =>
+      i === index ? { ...task, completed: !task.completed } : task
+    );
+    setTasks(updatedTasks);
+    updateLocalStorage(updatedTasks);
+  };
+
+  const delTask = (index) => {
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
+    updateLocalStorage(updatedTasks);
+  };
+
+  const editTask = (index) => {
+    setInput(tasks[index].text);
+    delTask(index); // Deletes from state and updates local storage
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <div className="todo-container">
+        <h2>To-Do List</h2>
+        <div className="todo-input">
+          <input
+            type="text"
+            value={input}
+            onChange={inputChange}
+            placeholder="Add a new task..."
+          />
+          <button className="btn btn-success" onClick={addTask}>
+            Save
+          </button>
+        </div>
+        <ul id="taskList">
+          {tasks.map((item, index) => (
+            <li key={index}>
+              <span>
+                <input
+                  type="checkbox"
+                  checked={item.completed}
+                  onChange={() => toggleComplete(index)}
+                  className="me-3"
+                />
+                <span className={item.completed ? "text-decoration-line-through" : ""}>
+                  {item.text}
+                </span>
+              </span>
+              <span>
+                <button className="btn btn-danger" onClick={() => delTask(index)}>
+                  del
+                </button>
+                <button className="btn btn-warning" onClick={() => editTask(index)}>
+                  edit
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default App
+export default App;
